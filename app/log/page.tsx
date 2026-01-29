@@ -19,14 +19,16 @@ export default function LogActivityPage() {
     const [note, setNote] = useState("");
     const [amount, setAmount] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
         setIsSubmitting(true);
+        setSuccessMessage("");
 
         const result = await logActivity({
-            id: crypto.randomUUID(), // Generates client-side UUID, but it's fine.
+            id: crypto.randomUUID(),
             userEmail: user.email,
             date,
             type,
@@ -37,7 +39,15 @@ export default function LogActivityPage() {
         });
 
         if (result.success) {
-            router.push("/dashboard");
+            setSuccessMessage(`Successfully logged ${type.replace('_', ' ').toLowerCase()}!`);
+            // Reset form for next entry
+            setNote("");
+            setAmount("");
+            // Keeping date and done status as they might be likely to repeat
+
+            // Clear message after some time
+            setTimeout(() => setSuccessMessage(""), 3000);
+            setIsSubmitting(false);
         } else {
             alert("Failed to log activity");
             setIsSubmitting(false);
@@ -78,8 +88,8 @@ export default function LogActivityPage() {
                                     type="button"
                                     onClick={() => setType(t)}
                                     className={`p-4 rounded-xl border text-sm font-medium transition-all ${type === t
-                                            ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
-                                            : "border-input bg-card hover:bg-accent"
+                                        ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
+                                        : "border-input bg-card hover:bg-accent"
                                         }`}
                                 >
                                     {t.replace('_', ' ')}
@@ -127,6 +137,12 @@ export default function LogActivityPage() {
                             className="flex min-h-[100px] w-full rounded-xl border border-input bg-transparent px-3 py-2 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                     </div>
+
+                    {successMessage && (
+                        <p className="text-center text-emerald-600 font-medium animate-in fade-in slide-in-from-bottom-2">
+                            {successMessage}
+                        </p>
+                    )}
 
                     <Button type="submit" size="lg" className="w-full text-lg h-14 rounded-2xl shadow-lg shadow-primary/20" disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : null}
