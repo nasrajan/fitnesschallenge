@@ -23,12 +23,12 @@ export default function RegisterPage() {
         setError("");
 
         try {
-            const success = await register({
+            const result = await register({
                 ...formData,
                 createdAt: new Date().toISOString()
             });
-            if (!success) {
-                setError("User already registered. Please login.");
+            if (!result.success) {
+                setError(result.error || "User already registered. Please login.");
             }
         } catch {
             setError("An error occurred.");

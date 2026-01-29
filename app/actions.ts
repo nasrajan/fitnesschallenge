@@ -92,3 +92,67 @@ export async function getActivityLogs(email: string) {
         return { success: false, activities: [] }; // Return empty list rather than exploding
     }
 }
+
+export async function getLeaderboard(startDate?: string, endDate?: string) {
+    try {
+        let query;
+        if (startDate && endDate) {
+            // Use aggregation to get logs array. 
+            // Note: date logic is string based 'YYYY-MM-DD'.
+            query = sql`
+                SELECT 
+                    u.first_name as "firstName", 
+                    u.last_name as "lastName", 
+                    u.email,
+                    COUNT(a.id) as score,
+                    COALESCE(
+                        JSON_AGG(
+                            json_build_object(
+                                'type', a.type, 
+                                'date', a.date, 
+                                'completed', a.completed
+                            )
+                        ) FILTER (WHERE a.id IS NOT NULL), 
+                        '[]'
+                    ) as logs
+                FROM users u
+                LEFT JOIN activity_logs a ON u.email = a.user_email 
+                    AND a.date >= ${startDate} AND a.date <= ${endDate} 
+                    AND a.completed = TRUE
+                GROUP BY u.email, u.first_name, u.last_name
+                ORDER BY score DESC
+                LIMIT 50
+            `;
+        } else {
+            // Fallback "All Time" but typically we want range
+            query = sql`
+                SELECT 
+                    u.first_name as "firstName", 
+                    u.last_name as "lastName", 
+                    u.email,
+                    COUNT(a.id) as score,
+                    COALESCE(
+                         JSON_AGG(
+                            json_build_object(
+                                'type', a.type, 
+                                'date', a.date, 
+                                'completed', a.completed
+                            )
+                        ) FILTER (WHERE a.id IS NOT NULL), 
+                        '[]'
+                    ) as logs
+                FROM users u
+                LEFT JOIN activity_logs a ON u.email = a.user_email AND a.completed = TRUE
+                GROUP BY u.email, u.first_name, u.last_name
+                ORDER BY score DESC
+                LIMIT 50
+            `;
+        }
+
+        const result = await query;
+        return { success: true, leaderboard: result.rows };
+    } catch (error) {
+        console.error("Database Error:", error);
+        return { success: false, leaderboard: [] };
+    }
+}

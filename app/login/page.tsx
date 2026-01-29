@@ -19,9 +19,9 @@ export default function LoginPage() {
         setError("");
 
         try {
-            const success = await login(email);
-            if (!success) {
-                setError("User not found. Please register first.");
+            const result = await login(email);
+            if (!result.success) {
+                setError(result.error || "User not found. Please register first.");
             }
         } catch (err) {
             console.error(err);

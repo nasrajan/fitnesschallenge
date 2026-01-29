@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string) => Promise<boolean>;
-    register: (user: User) => Promise<boolean>;
+    login: (email: string) => Promise<{ success: boolean; error?: string }>;
+    register: (user: User) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     isLoading: boolean;
 }
@@ -53,10 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(result.user);
             setIsLoading(false);
             router.push("/dashboard");
-            return true;
+            return { success: true };
         }
         setIsLoading(false);
-        return false;
+        return { success: false, error: result.error || "Login failed" };
     };
 
     const register = async (newUser: User) => {
@@ -69,10 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(newUser);
             setIsLoading(false);
             router.push("/dashboard");
-            return true;
+            return { success: true };
         }
         setIsLoading(false);
-        return false; // User already exists or error
+        return { success: false, error: result.error || "Registration failed" };
     };
 
     const logout = () => {

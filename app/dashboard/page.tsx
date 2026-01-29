@@ -55,9 +55,16 @@ export default function Dashboard() {
                     <p className="text-sm text-muted-foreground">Welcome back,</p>
                     <h1 className="text-2xl font-bold capitalize">{user.firstName}</h1>
                 </div>
-                <Button variant="ghost" size="icon" onClick={logout}>
-                    <LogOut className="h-5 w-5 text-muted-foreground" />
-                </Button>
+                <div className="flex gap-2">
+                    <Link href="/leaderboard">
+                        <Button variant="outline" size="icon">
+                            <Trophy className="h-5 w-5 text-yellow-600" />
+                        </Button>
+                    </Link>
+                    <Button variant="ghost" size="icon" onClick={logout}>
+                        <LogOut className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                </div>
             </header>
 
             <main className="px-6 py-6 space-y-8">
