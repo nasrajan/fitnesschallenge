@@ -21,6 +21,14 @@ export function getDatesInRange(startDate: string, endDate: string): string[] {
 
 export type DayStatus = 'green' | 'yellow' | 'grey';
 
+export interface WeeklyStats {
+    waterDays: number;
+    walkDays: number;
+    workoutDays: number;
+    ramadanDays: number;
+    isSuccessful: boolean;
+}
+
 export function getDailyStatus(date: string, logs: ActivityLog[]): DayStatus {
     const dayLogs = logs.filter(l => l.date === date && l.completed);
     if (dayLogs.length === 0) return 'grey';
@@ -33,3 +41,34 @@ export function getDailyStatus(date: string, logs: ActivityLog[]): DayStatus {
 
     return 'yellow';
 }
+
+export function getWeeklyStats(startDate: string, endDate: string, allLogs: ActivityLog[]): WeeklyStats {
+    const weekLogs = allLogs.filter(l => l.date >= startDate && l.date <= endDate && l.completed);
+
+    // Group logs by date to count days each activity type was done
+    const activityDays = {
+        WATER: new Set<string>(),
+        WALK: new Set<string>(),
+        WORKOUT: new Set<string>(),
+        RAMADAN_PREP: new Set<string>()
+    };
+
+    weekLogs.forEach(log => {
+        if (activityDays[log.type as keyof typeof activityDays]) {
+            activityDays[log.type as keyof typeof activityDays].add(log.date);
+        }
+    });
+
+    const stats = {
+        waterDays: activityDays.WATER.size,
+        walkDays: activityDays.WALK.size,
+        workoutDays: activityDays.WORKOUT.size,
+        ramadanDays: activityDays.RAMADAN_PREP.size,
+    };
+
+    return {
+        ...stats,
+        isSuccessful: stats.waterDays >= 3 && stats.walkDays >= 5 && stats.workoutDays >= 5 && stats.ramadanDays >= 5
+    };
+}
+

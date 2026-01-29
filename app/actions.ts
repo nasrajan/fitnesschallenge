@@ -51,6 +51,12 @@ export async function logActivity(activity: ActivityLog) {
         await sql`
       INSERT INTO activity_logs (id, user_email, date, type, completed, note, value, timestamp)
       VALUES (${activity.id}, ${activity.userEmail}, ${activity.date}, ${activity.type}, ${activity.completed}, ${activity.note}, ${activity.value}, ${activity.timestamp})
+      ON CONFLICT (user_email, date, type) 
+      DO UPDATE SET 
+        completed = EXCLUDED.completed,
+        note = EXCLUDED.note,
+        value = EXCLUDED.value,
+        timestamp = EXCLUDED.timestamp
     `;
         revalidatePath("/dashboard");
         return { success: true };

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLeaderboard } from "@/app/actions";
-import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus } from "@/lib/challenge-dates";
+import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats } from "@/lib/challenge-dates";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trophy, Medal } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -73,13 +73,15 @@ export default function LeaderboardPage() {
                             leaderboard.map((entry, index) => {
                                 const rank = index + 1;
                                 const isMe = user?.email === entry.email;
+                                const stats = getWeeklyStats(currentWeek.start, currentWeek.end, entry.logs);
 
                                 return (
                                     <div
                                         key={entry.email}
                                         className={cn(
-                                            "flex flex-col gap-3 p-4 rounded-2xl border transition-all",
+                                            "flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-500",
                                             isMe ? "bg-primary/5 border-primary ring-1 ring-primary/50" : "bg-card border-border/50 shadow-sm",
+                                            stats.isSuccessful && "bg-emerald-500/15 border-emerald-500/40 shadow-emerald-500/10 shadow-lg"
                                         )}
                                     >
                                         <div className="flex items-center gap-4">
@@ -95,15 +97,19 @@ export default function LeaderboardPage() {
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <h3 className="font-bold truncate text-base">
+                                                    <h3 className={cn(
+                                                        "font-bold truncate text-base flex items-center gap-2",
+                                                        stats.isSuccessful && "text-emerald-700 dark:text-emerald-400"
+                                                    )}>
                                                         {entry.firstName} {entry.lastName.charAt(0)}.
                                                         {isMe && <span className="text-xs font-normal text-muted-foreground ml-2">(You)</span>}
+                                                        {stats.isSuccessful && <Trophy className="h-4 w-4 text-emerald-500" />}
                                                     </h3>
                                                 </div>
                                             </div>
 
                                             <div className="text-right">
-                                                <span className="text-xl font-black">{entry.score}</span>
+                                                <span className={cn("text-xl font-black", stats.isSuccessful && "text-emerald-600")}>{entry.score}</span>
                                             </div>
                                         </div>
 
