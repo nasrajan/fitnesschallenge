@@ -13,13 +13,13 @@ export default function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAction = async (formData: FormData) => {
         setIsSubmitting(true);
         setError("");
+        const emailValue = formData.get("email") as string;
 
         try {
-            const result = await login(email);
+            const result = await login(emailValue);
             if (!result.success) {
                 setError(result.error || "User not found. Please register first.");
             }
@@ -39,11 +39,12 @@ export default function LoginPage() {
                     <p className="text-muted-foreground">Enter your email to sign in to the challenge.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form action={handleAction} className="space-y-4">
                     <div className="space-y-2">
                         <Input
                             placeholder="Email Address"
                             type="email"
+                            name="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}

@@ -3,6 +3,7 @@
 import { sql } from "@vercel/postgres";
 import { User, ActivityLog, ActivityType } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+import { sanitizeInput } from "@/lib/utils";
 
 // --- User Actions ---
 
@@ -18,7 +19,7 @@ export async function registerUser(user: User) {
 
         await sql`
       INSERT INTO users (email, first_name, last_name, created_at)
-      VALUES (${user.email}, ${user.firstName}, ${user.lastName}, ${new Date().toISOString()})
+      VALUES (${user.email}, ${sanitizeInput(user.firstName)}, ${sanitizeInput(user.lastName)}, ${new Date().toISOString()})
     `;
         return { success: true, user };
     } catch (error) {
@@ -50,7 +51,7 @@ export async function logActivity(activity: ActivityLog) {
     try {
         await sql`
       INSERT INTO activity_logs (id, user_email, date, type, completed, note, value, timestamp)
-      VALUES (${activity.id}, ${activity.userEmail}, ${activity.date}, ${activity.type}, ${activity.completed}, ${activity.note}, ${activity.value}, ${activity.timestamp})
+      VALUES (${activity.id}, ${activity.userEmail}, ${activity.date}, ${activity.type}, ${activity.completed}, ${sanitizeInput(activity.note || "")}, ${activity.value}, ${activity.timestamp})
       ON CONFLICT (user_email, date, type) 
       DO UPDATE SET 
         completed = EXCLUDED.completed,
@@ -96,6 +97,34 @@ export async function getActivityLogs(email: string) {
     } catch (error) {
         console.error("Database Error:", error);
         return { success: false, activities: [] }; // Return empty list rather than exploding
+    }
+}
+
+export async function getActivityLogsByDate(email: string, date: string) {
+    try {
+        const result = await sql`
+      SELECT 
+        id, 
+        user_email as "userEmail", 
+        date, 
+        type, 
+        completed, 
+        note, 
+        value, 
+        timestamp 
+      FROM activity_logs 
+      WHERE user_email = ${email} AND date = ${date}
+    `;
+
+        const activities = result.rows.map(row => ({
+            ...row,
+            value: row.value ? parseFloat(row.value) : undefined
+        })) as ActivityLog[];
+
+        return { success: true, activities };
+    } catch (error) {
+        console.error("Database Error:", error);
+        return { success: false, activities: [] };
     }
 }
 

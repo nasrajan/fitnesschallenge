@@ -52,20 +52,20 @@ export function WeeklyProgress({ activities }: { activities: ActivityLog[] }) {
                                     <Tooltip key={date} delayDuration={0}>
                                         <TooltipTrigger asChild>
                                             <div
-                                                className="flex flex-col items-center gap-1 cursor-pointer group outline-none hover:bg-sky-100/50 p-2 -m-2 rounded-xl transition-all duration-300"
+                                                className="flex flex-col items-center gap-1 cursor-pointer group outline-none hover:bg-muted/50 p-2 -m-2 rounded-xl transition-all duration-300"
                                                 onClick={() => handleDayClick(date)}
                                                 tabIndex={0}
                                             >
                                                 <div
                                                     className={cn(
-                                                        "w-full aspect-square rounded-md transition-all duration-300 group-hover:scale-110 group-focus:ring-2 group-focus:ring-sky-500 group-focus:ring-offset-1",
+                                                        "w-full aspect-square rounded-md transition-all duration-300 group-hover:scale-110 group-focus:ring-2 group-focus:ring-primary group-focus:ring-offset-1",
                                                         status === 'green' && "bg-emerald-500 shadow-emerald-500/30 shadow-md group-hover:bg-emerald-600",
                                                         status === 'yellow' && "bg-amber-400 shadow-amber-400/30 shadow-md group-hover:bg-amber-500",
-                                                        status === 'grey' && "bg-secondary/50 group-hover:bg-sky-200",
+                                                        status === 'grey' && "bg-secondary/50 group-hover:bg-secondary",
                                                         isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                                                     )}
                                                 />
-                                                <span className="text-[10px] text-muted-foreground font-medium group-hover:text-sky-600 transition-colors">{dayName}</span>
+                                                <span className="text-[10px] text-muted-foreground font-medium group-hover:text-foreground transition-colors">{dayName}</span>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent side="top">

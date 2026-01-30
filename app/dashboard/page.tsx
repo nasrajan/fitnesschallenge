@@ -6,7 +6,7 @@ import { ActivityLog } from "@/lib/types";
 import { getActivityLogs } from "@/app/actions"; // Server Action
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Plus, Trophy, Droplets, Target, Moon, LogOut, Loader2 } from "lucide-react";
+import { Plus, Trophy, Droplets, Moon, LogOut, Loader2, Activity, Footprints } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WeeklyProgress } from "@/components/WeeklyProgress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -96,20 +96,20 @@ export default function Dashboard() {
                     <div className="grid grid-cols-2 gap-4">
 
                         {/* Walk */}
-                        <div className="col-span-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+                        <div className="col-span-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
                             <div className="relative z-10">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                        <Trophy className="h-6 w-6 text-white" />
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                                        <Footprints className="h-5 w-5 text-white" />
                                     </div>
-                                    <span className="text-sm font-medium opacity-80">Goal: 5,000</span>
+                                    <span className="text-xs font-medium opacity-80">Goal: 5,000</span>
                                 </div>
-                                <div className="space-y-1">
-                                    <h3 className="text-4xl font-bold tracking-tight">{totalMiles.toLocaleString()}</h3>
-                                    <p className="text-sm opacity-80 font-medium">Miles Walked</p>
+                                <div className="space-y-0.5">
+                                    <h3 className="text-3xl font-bold tracking-tight">{totalMiles.toLocaleString()}</h3>
+                                    <p className="text-xs opacity-80 font-medium">Miles Walked</p>
                                 </div>
 
-                                <div className="mt-4 h-2 w-full bg-black/20 rounded-full overflow-hidden">
+                                <div className="mt-2 h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
                                     <div className="h-full bg-white/90 rounded-full" style={{ width: `${Math.min((totalMiles / 5000) * 100, 100)}%` }} />
                                 </div>
                             </div>
@@ -117,35 +117,35 @@ export default function Dashboard() {
                         </div>
 
                         {/* Water */}
-                        <div className="bg-card border border-border/50 rounded-3xl p-5 shadow-sm space-y-3">
-                            <div className="h-10 w-10 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
-                                <Droplets className="h-5 w-5" />
+                        <div className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm space-y-2">
+                            <div className="h-8 w-8 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+                                <Droplets className="h-4 w-4" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold">{totalWater}L</h3>
-                                <p className="text-xs text-muted-foreground">Water Consumed</p>
+                                <h3 className="text-xl font-bold">{totalWater}L</h3>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Water</p>
                             </div>
                         </div>
 
                         {/* Workouts */}
-                        <div className="bg-card border border-border/50 rounded-3xl p-5 shadow-sm space-y-3">
-                            <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
-                                <Target className="h-5 w-5" />
+                        <div className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm space-y-2">
+                            <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                                <Activity className="h-4 w-4" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold">{workoutCount}</h3>
-                                <p className="text-xs text-muted-foreground">Workouts Done</p>
+                                <h3 className="text-xl font-bold">{workoutCount}</h3>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Workouts</p>
                             </div>
                         </div>
 
                         {/* Ramadan */}
-                        <div className="col-span-2 bg-card border border-border/50 rounded-3xl p-5 shadow-sm flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-                                <Moon className="h-6 w-6" />
+                        <div className="col-span-2 bg-card border border-border/50 rounded-2xl p-4 shadow-sm flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                                <Moon className="h-5 w-5" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold">{ramadanCount} Days</h3>
-                                <p className="text-xs text-muted-foreground">Ramadan Preparation Streak</p>
+                                <h3 className="text-lg font-bold">{ramadanCount} Days</h3>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Ramadan Streak</p>
                             </div>
                         </div>
                     </div>

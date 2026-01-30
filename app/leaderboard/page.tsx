@@ -25,12 +25,13 @@ export default function LeaderboardPage() {
     const [loading, setLoading] = useState(true);
 
     const today = new Date().toISOString().split('T')[0];
-    const currentWeek = CHALLENGE_WEEKS.find(w => today >= w.start && today <= w.end) || CHALLENGE_WEEKS[0];
-    const weekDays = getDatesInRange(currentWeek.start, currentWeek.end);
+    const initialWeek = CHALLENGE_WEEKS.find(w => today >= w.start && today <= w.end) || CHALLENGE_WEEKS[0];
+    const [selectedWeek, setSelectedWeek] = useState(initialWeek);
+    const weekDays = getDatesInRange(selectedWeek.start, selectedWeek.end);
 
     useEffect(() => {
         setLoading(true);
-        getLeaderboard(currentWeek.start, currentWeek.end).then((res) => {
+        getLeaderboard(selectedWeek.start, selectedWeek.end).then((res) => {
             if (res.success && res.leaderboard) {
                 const formatted = res.leaderboard.map((entry: any) => ({
                     ...entry,
@@ -44,17 +45,30 @@ export default function LeaderboardPage() {
             }
             setLoading(false);
         });
-    }, [currentWeek]);
+    }, [selectedWeek]);
 
     return (
         <div className="min-h-screen bg-background pb-10">
             <header className="px-4 py-4 flex items-center gap-4 border-b border-border/50 sticky top-0 bg-background/80 backdrop-blur-md z-10">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')}>
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
                     <h1 className="text-lg font-bold">Leaderboard</h1>
-                    <p className="text-xs text-muted-foreground">{currentWeek.label}: {new Date(currentWeek.start).toLocaleDateString([], { month: 'short', day: 'numeric' })} - {new Date(currentWeek.end).toLocaleDateString([], { month: 'short', day: 'numeric' })}</p>
+                    <select
+                        className="bg-transparent text-xs text-muted-foreground border-none p-0 focus:ring-0 cursor-pointer hover:text-foreground transition-colors"
+                        value={selectedWeek.id}
+                        onChange={(e) => {
+                            const week = CHALLENGE_WEEKS.find(w => w.id === parseInt(e.target.value));
+                            if (week) setSelectedWeek(week);
+                        }}
+                    >
+                        {CHALLENGE_WEEKS.map(w => (
+                            <option key={w.id} value={w.id}>
+                                {w.label}: {new Date(w.start).toLocaleDateString([], { month: 'short', day: 'numeric' })} - {new Date(w.end).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </header>
 
@@ -73,7 +87,7 @@ export default function LeaderboardPage() {
                             leaderboard.map((entry, index) => {
                                 const rank = index + 1;
                                 const isMe = user?.email === entry.email;
-                                const stats = getWeeklyStats(currentWeek.start, currentWeek.end, entry.logs);
+                                const stats = getWeeklyStats(selectedWeek.start, selectedWeek.end, entry.logs);
 
                                 return (
                                     <div
@@ -87,12 +101,12 @@ export default function LeaderboardPage() {
                                         <div className="flex items-center gap-4">
                                             <div className={cn(
                                                 "h-8 w-8 flex items-center justify-center rounded-full font-bold text-sm shrink-0",
-                                                rank === 1 ? "text-yellow-600 bg-yellow-100" :
-                                                    rank === 2 ? "text-slate-600 bg-slate-100" :
-                                                        rank === 3 ? "text-amber-700 bg-amber-100" :
+                                                entry.score > 0 && rank === 1 ? "text-white bg-yellow-500 shadow-md shadow-yellow-500/20" :
+                                                    entry.score > 0 && rank === 2 ? "text-white bg-slate-400 shadow-md shadow-slate-400/20" :
+                                                        entry.score > 0 && rank === 3 ? "text-white bg-amber-600 shadow-md shadow-amber-600/20" :
                                                             "text-muted-foreground bg-secondary"
                                             )}>
-                                                {rank <= 3 ? <Medal className="h-5 w-5" /> : rank}
+                                                {entry.score > 0 && rank <= 3 ? <Medal className="h-5 w-5" /> : rank}
                                             </div>
 
                                             <div className="flex-1 min-w-0">
