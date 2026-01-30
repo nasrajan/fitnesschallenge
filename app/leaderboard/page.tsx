@@ -115,7 +115,7 @@ export default function LeaderboardPage() {
                                                         "font-bold truncate text-base flex items-center gap-2",
                                                         stats.isSuccessful && "text-emerald-700 dark:text-emerald-400"
                                                     )}>
-                                                        {entry.firstName} {entry.lastName.charAt(0)}.
+                                                        {entry.firstName} {entry.lastName}
                                                         {isMe && <span className="text-xs font-normal text-muted-foreground ml-2">(You)</span>}
                                                         {stats.isSuccessful && <Trophy className="h-4 w-4 text-emerald-500" />}
                                                     </h3>
