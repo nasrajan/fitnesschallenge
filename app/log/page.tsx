@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ActivityType } from "@/lib/types";
 import { logActivity } from "@/app/actions"; // Server Action
@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-export default function LogActivityPage() {
+function LogActivityForm() {
     const router = useRouter();
     const { user } = useAuth();
+    const searchParams = useSearchParams();
+    const dateParam = searchParams.get('date');
 
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(dateParam || new Date().toISOString().split('T')[0]);
     const [type, setType] = useState<ActivityType>('WALK');
     const [done, setDone] = useState(true);
     const [note, setNote] = useState("");
@@ -152,5 +154,13 @@ export default function LogActivityPage() {
                 </form>
             </main>
         </div>
+    );
+}
+
+export default function LogActivityPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <LogActivityForm />
+        </Suspense>
     );
 }
