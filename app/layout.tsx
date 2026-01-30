@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "Track your progress and stay healthy.",
 };
 
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,9 +35,11 @@ export default function RootLayout({
         )}
       >
         <AuthProvider>
-          <main className="mx-auto max-w-md w-full min-h-screen relative overflow-hidden bg-background sm:border-x sm:border-border/50">
-            {children}
-          </main>
+          <TooltipProvider>
+            <main className="mx-auto max-w-md w-full min-h-screen relative overflow-hidden bg-background sm:border-x sm:border-border/50">
+              {children}
+            </main>
+          </TooltipProvider>
         </AuthProvider>
       </body>
     </html>

@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Plus, Trophy, Droplets, Target, Moon, LogOut, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WeeklyProgress } from "@/components/WeeklyProgress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Dashboard() {
     const { user, logout, isLoading: authLoading } = useAuth();
@@ -56,14 +57,29 @@ export default function Dashboard() {
                     <h1 className="text-2xl font-bold capitalize">{user.firstName}</h1>
                 </div>
                 <div className="flex gap-2">
-                    <Link href="/leaderboard">
-                        <Button variant="outline" size="icon">
-                            <Trophy className="h-5 w-5 text-yellow-600" />
-                        </Button>
-                    </Link>
-                    <Button variant="ghost" size="icon" onClick={logout}>
-                        <LogOut className="h-5 w-5 text-muted-foreground" />
-                    </Button>
+                    <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                            <Link href="/leaderboard">
+                                <Button variant="outline" size="icon">
+                                    <Trophy className="h-5 w-5 text-yellow-600" />
+                                </Button>
+                            </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Leaderboard</TooltipContent>
+                    </Tooltip>
+                    <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={logout}
+                                className="text-destructive border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 hover:text-destructive"
+                            >
+                                <LogOut className="h-5 w-5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Log Out</TooltipContent>
+                    </Tooltip>
                 </div>
             </header>
 

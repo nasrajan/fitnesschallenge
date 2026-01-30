@@ -1,17 +1,19 @@
+"use client";
+
 import React from "react";
+import { useRouter } from "next/navigation";
 import { ActivityLog } from "@/lib/types";
 import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats } from "@/lib/challenge-dates";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip";
-
-// Minimal Tooltip impl since I didn't install shadcn tooltip perfectly, 
-// using title attribute as fallback or simple div if simple.
-// Actually, let's build a simple custom tooltip-like behavior or just use title for simplicity/speed
-// given the "Mobile Friendly" request (tooltips are tricky on mobile).
-// I'll render the date below the box or just use simple blocks.
-// User checking boxes: "Week 1", then 7 blocks.
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function WeeklyProgress({ activities }: { activities: ActivityLog[] }) {
+    const router = useRouter();
+
+    const handleDayClick = (date: string) => {
+        router.push(`/log?date=${date}`);
+    };
+
     return (
         <div className="space-y-6">
             {CHALLENGE_WEEKS.map((week) => {
@@ -44,21 +46,32 @@ export function WeeklyProgress({ activities }: { activities: ActivityLog[] }) {
                                 const status = getDailyStatus(date, activities);
                                 const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'narrow' });
                                 const isToday = new Date().toISOString().split('T')[0] === date;
+                                const shortDate = new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
                                 return (
-                                    <div key={date} className="flex flex-col items-center gap-1">
-                                        <div
-                                            className={cn(
-                                                "w-full aspect-square rounded-md transition-all duration-300",
-                                                status === 'green' && "bg-emerald-500 shadow-emerald-500/30 shadow-md",
-                                                status === 'yellow' && "bg-amber-400 shadow-amber-400/30 shadow-md",
-                                                status === 'grey' && "bg-secondary/50",
-                                                isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                                            )}
-                                            title={`${date}: ${status === 'green' ? 'All Done!' : status === 'yellow' ? 'Partial' : 'No Activity'}`}
-                                        />
-                                        <span className="text-[10px] text-muted-foreground font-medium">{dayName}</span>
-                                    </div>
+                                    <Tooltip key={date} delayDuration={0}>
+                                        <TooltipTrigger asChild>
+                                            <div
+                                                className="flex flex-col items-center gap-1 cursor-pointer group outline-none hover:bg-sky-100/50 p-2 -m-2 rounded-xl transition-all duration-300"
+                                                onClick={() => handleDayClick(date)}
+                                                tabIndex={0}
+                                            >
+                                                <div
+                                                    className={cn(
+                                                        "w-full aspect-square rounded-md transition-all duration-300 group-hover:scale-110 group-focus:ring-2 group-focus:ring-sky-500 group-focus:ring-offset-1",
+                                                        status === 'green' && "bg-emerald-500 shadow-emerald-500/30 shadow-md group-hover:bg-emerald-600",
+                                                        status === 'yellow' && "bg-amber-400 shadow-amber-400/30 shadow-md group-hover:bg-amber-500",
+                                                        status === 'grey' && "bg-secondary/50 group-hover:bg-sky-200",
+                                                        isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                                                    )}
+                                                />
+                                                <span className="text-[10px] text-muted-foreground font-medium group-hover:text-sky-600 transition-colors">{dayName}</span>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">
+                                            {shortDate}
+                                        </TooltipContent>
+                                    </Tooltip>
                                 );
                             })}
                         </div>
