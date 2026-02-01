@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string) => Promise<{ success: boolean; error?: string }>;
+    login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
     register: (user: User) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     isLoading: boolean;
@@ -43,16 +43,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    const login = async (email: string) => {
+    const login = async (email: string, password?: string) => {
         setIsLoading(true);
-        const result = await loginUser(email);
+        const result = await loginUser(email, password);
         if (result.success && result.user) {
             if (typeof window !== "undefined") {
                 localStorage.setItem("fitness_current_user", email);
             }
             setUser(result.user);
             setIsLoading(false);
-            router.push("/dashboard");
+
+            if (result.user.role === 'ADMIN') {
+                router.push("/admin/dashboard");
+            } else {
+                router.push("/dashboard");
+            }
             return { success: true };
         }
         setIsLoading(false);
@@ -66,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (typeof window !== "undefined") {
                 localStorage.setItem("fitness_current_user", newUser.email);
             }
-            setUser(newUser);
+            setUser(result.user || newUser);
             setIsLoading(false);
             router.push("/dashboard");
             return { success: true };

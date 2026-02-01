@@ -36,7 +36,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <TooltipProvider>
-            <main className="mx-auto max-w-md w-full min-h-screen relative overflow-hidden bg-background sm:border-x sm:border-border/50">
+            <main className="w-full min-h-screen relative overflow-hidden bg-background">
               {children}
             </main>
           </TooltipProvider>

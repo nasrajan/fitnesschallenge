@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { getLeaderboard } from "@/app/actions";
-import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats } from "@/lib/challenge-dates";
+import { getDatesInRange, getDailyStatus, getWeeklyStats, getActiveChallenges } from "@/lib/challenge-dates";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trophy, Medal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
-import { ActivityLog } from "@/lib/types";
+import { ActivityLog, Challenge } from "@/lib/types";
 
 interface LeaderboardEntry {
     firstName: string;
@@ -23,28 +23,40 @@ export default function LeaderboardPage() {
     const { user } = useAuth();
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
-
-    const today = new Date().toISOString().split('T')[0];
-    const currentWeek = CHALLENGE_WEEKS.find(w => today >= w.start && today <= w.end) || CHALLENGE_WEEKS[0];
-    const weekDays = getDatesInRange(currentWeek.start, currentWeek.end);
+    const [currentWeek, setCurrentWeek] = useState<Challenge | null>(null);
 
     useEffect(() => {
-        setLoading(true);
-        getLeaderboard(currentWeek.start, currentWeek.end).then((res) => {
-            if (res.success && res.leaderboard) {
-                const formatted = res.leaderboard.map((entry: any) => ({
-                    ...entry,
-                    score: parseInt(entry.score),
-                    // Ensure logs is proper array (sometimes sql returns string representation of json if driver not clever)
-                    // But vercel/postgres usually returns object.
-                    logs: typeof entry.logs === 'string' ? JSON.parse(entry.logs) : entry.logs
-                }));
-                // Sort by score mainly, but if logs are empty ensure they fall back? SQL does sort.
-                setLeaderboard(formatted);
+        const loadPage = async () => {
+            setLoading(true);
+            const challenges = await getActiveChallenges();
+            if (challenges.length > 0) {
+                const today = new Date().toISOString().split('T')[0];
+                const found = challenges.find(w => today >= w.startDate && today <= w.endDate) || challenges[0];
+                setCurrentWeek(found);
+
+                const res = await getLeaderboard(found.startDate, found.endDate);
+                if (res.success && res.leaderboard) {
+                    const formatted = res.leaderboard.map((entry: any) => ({
+                        ...entry,
+                        score: parseInt(entry.score),
+                        logs: typeof entry.logs === 'string' ? JSON.parse(entry.logs) : entry.logs
+                    }));
+                    setLeaderboard(formatted);
+                }
             }
             setLoading(false);
-        });
-    }, [currentWeek]);
+        };
+        loadPage();
+    }, []);
+
+    if (!currentWeek && !loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                <p className="text-muted-foreground mb-4">No active challenges found.</p>
+                <Button onClick={() => router.back()}>Go Back</Button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background pb-10">
@@ -54,7 +66,9 @@ export default function LeaderboardPage() {
                 </Button>
                 <div>
                     <h1 className="text-lg font-bold">Leaderboard</h1>
-                    <p className="text-xs text-muted-foreground">{currentWeek.label}: {new Date(currentWeek.start).toLocaleDateString([], { month: 'short', day: 'numeric' })} - {new Date(currentWeek.end).toLocaleDateString([], { month: 'short', day: 'numeric' })}</p>
+                    {currentWeek && (
+                        <p className="text-xs text-muted-foreground">{currentWeek.label}: {new Date(currentWeek.startDate).toLocaleDateString([], { month: 'short', day: 'numeric' })} - {new Date(currentWeek.endDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}</p>
+                    )}
                 </div>
             </header>
 
@@ -73,7 +87,8 @@ export default function LeaderboardPage() {
                             leaderboard.map((entry, index) => {
                                 const rank = index + 1;
                                 const isMe = user?.email === entry.email;
-                                const stats = getWeeklyStats(currentWeek.start, currentWeek.end, entry.logs);
+                                const stats = getWeeklyStats(currentWeek!.startDate, currentWeek!.endDate, entry.logs);
+                                const weekDays = getDatesInRange(currentWeek!.startDate, currentWeek!.endDate);
 
                                 return (
                                     <div

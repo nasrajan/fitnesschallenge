@@ -1,11 +1,10 @@
-import { ActivityLog } from "./types";
+import { ActivityLog, Challenge } from "./types";
+import { getChallenges } from "@/app/actions";
 
-export const CHALLENGE_WEEKS = [
-    { id: 1, label: "Week 1", start: "2026-01-19", end: "2026-01-25" },
-    { id: 2, label: "Week 2", start: "2026-01-26", end: "2026-02-01" },
-    { id: 3, label: "Week 3", start: "2026-02-02", end: "2026-02-08" },
-    { id: 4, label: "Week 4", start: "2026-02-09", end: "2026-02-15" },
-];
+export async function getActiveChallenges(): Promise<Challenge[]> {
+    const res = await getChallenges();
+    return res.success ? res.challenges || [] : [];
+}
 
 export function getDatesInRange(startDate: string, endDate: string): string[] {
     const dates = [];
@@ -21,54 +20,56 @@ export function getDatesInRange(startDate: string, endDate: string): string[] {
 
 export type DayStatus = 'green' | 'yellow' | 'grey';
 
-export interface WeeklyStats {
-    waterDays: number;
-    walkDays: number;
-    workoutDays: number;
-    ramadanDays: number;
-    isSuccessful: boolean;
+export interface Milestone {
+    label: string;
+    startDate: string;
+    endDate: string;
 }
 
-export function getDailyStatus(date: string, logs: ActivityLog[]): DayStatus {
+export function calculateMilestones(challenge: Challenge): Milestone[] {
+    const milestones: Milestone[] = [];
+    const start = new Date(challenge.startDate);
+    const end = new Date(challenge.endDate);
+
+    let current = new Date(start);
+    let count = 1;
+
+    while (current <= end) {
+        let milestoneEnd = new Date(current);
+
+        if (challenge.milestoneType === 'DAY') {
+            milestoneEnd.setDate(current.getDate());
+        } else if (challenge.milestoneType === 'WEEK') {
+            milestoneEnd.setDate(current.getDate() + 6);
+        } else if (challenge.milestoneType === 'MONTH') {
+            milestoneEnd.setMonth(current.getMonth() + 1);
+            milestoneEnd.setDate(0); // Last day of previous month
+        }
+
+        if (milestoneEnd > end) milestoneEnd = new Date(end);
+
+        milestones.push({
+            label: `${challenge.milestoneType === 'DAY' ? 'Day' : challenge.milestoneType === 'WEEK' ? 'Week' : 'Month'} ${count}`,
+            startDate: current.toISOString().split('T')[0],
+            endDate: milestoneEnd.toISOString().split('T')[0]
+        });
+
+        current = new Date(milestoneEnd);
+        current.setDate(milestoneEnd.getDate() + 1);
+        count++;
+    }
+
+    return milestones;
+}
+
+export function getDailyStatus(date: string, logs: ActivityLog[], activities: any[]): DayStatus {
     const dayLogs = logs.filter(l => l.date === date && l.completed);
     if (dayLogs.length === 0) return 'grey';
 
-    const uniqueTypes = new Set(dayLogs.map(l => l.type));
-
-    // Check if we have all 4 types
-    // Types are: WALK, WATER, WORKOUT, RAMADAN_PREP
-    if (uniqueTypes.size === 4) return 'green';
+    // If all required activities for the day have at least one completed log
+    const completedActivityIds = new Set(dayLogs.map(l => l.activityId));
+    if (completedActivityIds.size >= activities.length) return 'green';
 
     return 'yellow';
-}
-
-export function getWeeklyStats(startDate: string, endDate: string, allLogs: ActivityLog[]): WeeklyStats {
-    const weekLogs = allLogs.filter(l => l.date >= startDate && l.date <= endDate && l.completed);
-
-    // Group logs by date to count days each activity type was done
-    const activityDays = {
-        WATER: new Set<string>(),
-        WALK: new Set<string>(),
-        WORKOUT: new Set<string>(),
-        RAMADAN_PREP: new Set<string>()
-    };
-
-    weekLogs.forEach(log => {
-        if (activityDays[log.type as keyof typeof activityDays]) {
-            activityDays[log.type as keyof typeof activityDays].add(log.date);
-        }
-    });
-
-    const stats = {
-        waterDays: activityDays.WATER.size,
-        walkDays: activityDays.WALK.size,
-        workoutDays: activityDays.WORKOUT.size,
-        ramadanDays: activityDays.RAMADAN_PREP.size,
-    };
-
-    return {
-        ...stats,
-        isSuccessful: stats.waterDays >= 3 && stats.walkDays >= 5 && stats.workoutDays >= 5 && stats.ramadanDays >= 5
-    };
 }
 

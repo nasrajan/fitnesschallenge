@@ -25,6 +25,7 @@ export default function RegisterPage() {
         try {
             const result = await register({
                 ...formData,
+                role: 'PARTICIPANT',
                 createdAt: new Date().toISOString()
             });
             if (!result.success) {
