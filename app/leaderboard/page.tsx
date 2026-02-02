@@ -14,6 +14,7 @@ interface LeaderboardEntry {
     firstName: string;
     lastName: string;
     score: number;
+    rank: number;
     email: string;
     logs: ActivityLog[];
 }
@@ -84,8 +85,8 @@ export default function LeaderboardPage() {
                                 No activities recorded this week yet. <br /> Be the first!
                             </div>
                         ) : (
-                            leaderboard.map((entry, index) => {
-                                const rank = index + 1;
+                            leaderboard.map((entry) => {
+                                const rank = entry.rank;
                                 const isMe = user?.email === entry.email;
                                 const stats = getWeeklyStats(selectedWeek.start, selectedWeek.end, entry.logs);
 

@@ -139,7 +139,6 @@ export async function getLeaderboard(startDate?: string, endDate?: string) {
                     u.first_name as "firstName", 
                     u.last_name as "lastName", 
                     u.email,
-                    COUNT(a.id) as score,
                     COALESCE(
                         JSON_AGG(
                             json_build_object(
@@ -155,7 +154,6 @@ export async function getLeaderboard(startDate?: string, endDate?: string) {
                     AND a.date >= ${startDate} AND a.date <= ${endDate} 
                     AND a.completed = TRUE
                 GROUP BY u.email, u.first_name, u.last_name
-                ORDER BY score DESC
                 LIMIT 50
             `;
         } else {
@@ -165,7 +163,6 @@ export async function getLeaderboard(startDate?: string, endDate?: string) {
                     u.first_name as "firstName", 
                     u.last_name as "lastName", 
                     u.email,
-                    COUNT(a.id) as score,
                     COALESCE(
                          JSON_AGG(
                             json_build_object(
@@ -179,13 +176,66 @@ export async function getLeaderboard(startDate?: string, endDate?: string) {
                 FROM users u
                 LEFT JOIN activity_logs a ON u.email = a.user_email AND a.completed = TRUE
                 GROUP BY u.email, u.first_name, u.last_name
-                ORDER BY score DESC
                 LIMIT 50
             `;
         }
 
         const result = await query;
-        return { success: true, leaderboard: result.rows };
+
+        // Calculate capped scores for each user
+        // Workouts: max 3 days, Others (Walk, Water, Ramadan Prep): max 5 days each
+        const leaderboardWithScores = result.rows.map((row) => {
+            const logs = Array.isArray(row.logs) ? row.logs : [];
+
+            // Group by activity type and count unique days
+            const activityDays = {
+                WALK: new Set<string>(),
+                WATER: new Set<string>(),
+                WORKOUT: new Set<string>(),
+                RAMADAN_PREP: new Set<string>()
+            };
+
+            logs.forEach((log: any) => {
+                if (log.completed && log.type && log.date) {
+                    const set = activityDays[log.type as keyof typeof activityDays];
+                    if (set) {
+                        set.add(log.date);
+                    }
+                }
+            });
+
+            // Apply caps: Workout max 3, others max 5
+            const cappedScore =
+                Math.min(activityDays.WORKOUT.size, 3) +
+                Math.min(activityDays.WALK.size, 5) +
+                Math.min(activityDays.WATER.size, 5) +
+                Math.min(activityDays.RAMADAN_PREP.size, 5);
+
+            return {
+                ...row,
+                score: cappedScore,
+                logs
+            };
+        });
+
+        // Sort by capped score
+        leaderboardWithScores.sort((a, b) => b.score - a.score);
+
+        // Add ranking logic (dense ranking - consecutive ranks for ties)
+        let currentRank = 0;
+        let lastScore = -1;
+        const leaderboard = leaderboardWithScores.map((row) => {
+            if (row.score !== lastScore) {
+                currentRank++;
+                lastScore = row.score;
+            }
+            return {
+                ...row,
+                rank: currentRank
+            };
+        });
+
+        return { success: true, leaderboard };
     } catch (error) {
         console.error("Database Error:", error);
         return { success: false, leaderboard: [] };

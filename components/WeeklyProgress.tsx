@@ -38,15 +38,26 @@ export function WeeklyProgress({ activities }: { activities: ActivityLog[] }) {
                                 {week.label}
                                 {stats.isSuccessful && <span className="text-emerald-500 text-xs font-black uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded italic">Goal Met</span>}
                             </h3>
-                            <span className="text-xs text-muted-foreground">{new Date(week.start).toLocaleDateString([], { month: 'short', day: 'numeric' })} - {new Date(week.end).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                            <span className="text-xs text-muted-foreground">
+                                {(() => {
+                                    const [startYear, startMonth, startDay] = week.start.split('-').map(Number);
+                                    const [endYear, endMonth, endDay] = week.end.split('-').map(Number);
+                                    const startDate = new Date(startYear, startMonth - 1, startDay);
+                                    const endDate = new Date(endYear, endMonth - 1, endDay);
+                                    return `${startDate.toLocaleDateString([], { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+                                })()}
+                            </span>
                         </div>
 
                         <div className="grid grid-cols-7 gap-2">
                             {days.map((date) => {
                                 const status = getDailyStatus(date, activities);
-                                const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'narrow' });
+                                // Parse date string directly to avoid timezone issues
+                                const [year, month, day] = date.split('-').map(Number);
+                                const dateObj = new Date(year, month - 1, day);
+                                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'narrow' });
                                 const isToday = new Date().toISOString().split('T')[0] === date;
-                                const shortDate = new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+                                const shortDate = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
                                 return (
                                     <Tooltip key={date} delayDuration={0}>

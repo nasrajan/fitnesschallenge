@@ -22,6 +22,12 @@ export default function RegisterPage() {
         setIsSubmitting(true);
         setError("");
 
+        if (!formData.email || !formData.firstName || !formData.lastName) {
+            setError("All fields are required.");
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
             const result = await register({
                 ...formData,
@@ -47,29 +53,38 @@ export default function RegisterPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">First Name <span className="text-destructive">*</span></label>
+                            <Input
+                                placeholder="First Name"
+                                required
+                                value={formData.firstName}
+                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                className="bg-card/50"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Last Name <span className="text-destructive">*</span></label>
+                            <Input
+                                placeholder="Last Name"
+                                required
+                                value={formData.lastName}
+                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                className="bg-card/50"
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Email Address <span className="text-destructive">*</span></label>
                         <Input
-                            placeholder="First Name"
+                            placeholder="Email Address"
+                            type="email"
                             required
-                            value={formData.firstName}
-                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                            className="bg-card/50"
-                        />
-                        <Input
-                            placeholder="Last Name"
-                            required
-                            value={formData.lastName}
-                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             className="bg-card/50"
                         />
                     </div>
-                    <Input
-                        placeholder="Email Address"
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="bg-card/50"
-                    />
 
                     {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
