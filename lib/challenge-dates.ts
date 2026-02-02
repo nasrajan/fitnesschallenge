@@ -1,19 +1,27 @@
 import { ActivityLog } from "./types";
 
 export const CHALLENGE_WEEKS = [
-    { id: 1, label: "Week 1", start: "2026-01-19", end: "2026-01-25" },
-    { id: 2, label: "Week 2", start: "2026-01-26", end: "2026-02-01" },
-    { id: 3, label: "Week 3", start: "2026-02-02", end: "2026-02-08" },
-    { id: 4, label: "Week 4", start: "2026-02-09", end: "2026-02-15" },
+    { id: 1, label: "Week 1", start: "2026-01-18", end: "2026-01-24" },
+    { id: 2, label: "Week 2", start: "2026-01-25", end: "2026-01-31" },
+    { id: 3, label: "Week 3", start: "2026-02-01", end: "2026-02-07" },
+    { id: 4, label: "Week 4", start: "2026-02-08", end: "2026-02-14" },
 ];
 
 export function getDatesInRange(startDate: string, endDate: string): string[] {
     const dates = [];
-    const currDate = new Date(startDate);
-    const lastDate = new Date(endDate);
+
+    // Parse dates in local timezone to avoid UTC shifts
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+
+    const currDate = new Date(startYear, startMonth - 1, startDay);
+    const lastDate = new Date(endYear, endMonth - 1, endDay);
 
     while (currDate <= lastDate) {
-        dates.push(currDate.toISOString().split('T')[0]);
+        const year = currDate.getFullYear();
+        const month = String(currDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currDate.getDate()).padStart(2, '0');
+        dates.push(`${year}-${month}-${day}`);
         currDate.setDate(currDate.getDate() + 1);
     }
     return dates;
