@@ -31,6 +31,13 @@ function LogActivityForm() {
         WORKOUT: { completed: false, value: "" },
         RAMADAN_PREP: { completed: false, value: "" },
     });
+    // Track initial state to detect changes
+    const [initialActivities, setInitialActivities] = useState<Record<ActivityType, { completed: boolean, value: string }>>({
+        WALK: { completed: false, value: "" },
+        WATER: { completed: false, value: "" },
+        WORKOUT: { completed: false, value: "" },
+        RAMADAN_PREP: { completed: false, value: "" },
+    });
     const [commonNote, setCommonNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -63,15 +70,18 @@ function LogActivityForm() {
                 });
 
                 setActivities(newActivities);
+                setInitialActivities(JSON.parse(JSON.stringify(newActivities))); // Deep copy
                 setCommonNote(note);
             } else {
                 // Reset to defaults if no logs found for this date
-                setActivities({
+                const defaults = {
                     WALK: { completed: false, value: "" },
                     WATER: { completed: false, value: "" },
                     WORKOUT: { completed: false, value: "" },
                     RAMADAN_PREP: { completed: false, value: "" },
-                });
+                };
+                setActivities(defaults);
+                setInitialActivities(JSON.parse(JSON.stringify(defaults))); // Deep copy
                 setCommonNote("");
             }
         } catch (error) {
@@ -98,18 +108,21 @@ function LogActivityForm() {
         setIsSubmitting(true);
         setSuccessMessage("");
 
-        const activeLogs = (Object.keys(activities) as ActivityType[]).filter(type =>
-            activities[type].completed || activities[type].value
-        );
+        // Find all activities that have been modified
+        const modifiedActivities = (Object.keys(activities) as ActivityType[]).filter(type => {
+            const current = activities[type];
+            const initial = initialActivities[type];
+            return current.completed !== initial.completed || current.value !== initial.value;
+        });
 
-        if (activeLogs.length === 0) {
-            alert("No activities to save");
+        if (modifiedActivities.length === 0) {
+            alert("No changes to save");
             setIsSubmitting(false);
             return;
         }
 
         try {
-            const results = await Promise.all(activeLogs.map(type =>
+            const results = await Promise.all(modifiedActivities.map(type =>
                 logActivity({
                     id: crypto.randomUUID(),
                     userEmail: user.email,
@@ -124,6 +137,8 @@ function LogActivityForm() {
 
             if (results.every(r => r.success)) {
                 setSuccessMessage("Successfully logged your activities!");
+                // Update initial state to reflect saved changes
+                setInitialActivities(JSON.parse(JSON.stringify(activities)));
                 setTimeout(() => setSuccessMessage(""), 3000);
             } else {
                 alert("Some activities failed to log");
