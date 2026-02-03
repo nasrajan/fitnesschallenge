@@ -64,11 +64,17 @@ export default function LeaderboardPage() {
                             if (week) setSelectedWeek(week);
                         }}
                     >
-                        {CHALLENGE_WEEKS.map(w => (
-                            <option key={w.id} value={w.id}>
-                                {w.label}: {new Date(w.start).toLocaleDateString([], { month: 'short', day: 'numeric' })} - {new Date(w.end).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                            </option>
-                        ))}
+                        {CHALLENGE_WEEKS.map(w => {
+                            const [startYear, startMonth, startDay] = w.start.split('-').map(Number);
+                            const [endYear, endMonth, endDay] = w.end.split('-').map(Number);
+                            const startDate = new Date(startYear, startMonth - 1, startDay);
+                            const endDate = new Date(endYear, endMonth - 1, endDay);
+                            return (
+                                <option key={w.id} value={w.id}>
+                                    {w.label}: {startDate.toLocaleDateString([], { month: 'short', day: 'numeric' })} - {endDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                </option>
+                            );
+                        })}
                     </select>
                 </div>
             </header>
