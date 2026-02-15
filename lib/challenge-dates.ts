@@ -7,6 +7,15 @@ export const CHALLENGE_WEEKS = [
     { id: 4, label: "Week 4", start: "2026-02-08", end: "2026-02-14" },
 ];
 
+export const ALL_TIME_WEEK = { id: 0, label: "All Time", start: CHALLENGE_WEEKS[0].start, end: CHALLENGE_WEEKS[3].end };
+
+export function getChallengeRange() {
+    return {
+        start: CHALLENGE_WEEKS[0].start,
+        end: CHALLENGE_WEEKS[CHALLENGE_WEEKS.length - 1].end
+    };
+}
+
 export function getDatesInRange(startDate: string, endDate: string): string[] {
     const dates = [];
 

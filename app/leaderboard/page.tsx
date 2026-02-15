@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLeaderboard } from "@/app/actions";
-import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats } from "@/lib/challenge-dates";
+import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats, ALL_TIME_WEEK } from "@/lib/challenge-dates";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trophy, Medal } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -28,7 +28,8 @@ export default function LeaderboardPage() {
     const today = new Date().toISOString().split('T')[0];
     const initialWeek = CHALLENGE_WEEKS.find(w => today >= w.start && today <= w.end) || CHALLENGE_WEEKS[0];
     const [selectedWeek, setSelectedWeek] = useState(initialWeek);
-    const weekDays = getDatesInRange(selectedWeek.start, selectedWeek.end);
+    const isAllTime = selectedWeek.id === ALL_TIME_WEEK.id;
+    const weekDays = isAllTime ? [] : getDatesInRange(selectedWeek.start, selectedWeek.end);
 
     useEffect(() => {
         setLoading(true);
@@ -60,10 +61,16 @@ export default function LeaderboardPage() {
                         className="bg-transparent text-xs text-muted-foreground border-none p-0 focus:ring-0 cursor-pointer hover:text-foreground transition-colors"
                         value={selectedWeek.id}
                         onChange={(e) => {
-                            const week = CHALLENGE_WEEKS.find(w => w.id === parseInt(e.target.value));
-                            if (week) setSelectedWeek(week);
+                            const val = parseInt(e.target.value);
+                            if (val === ALL_TIME_WEEK.id) {
+                                setSelectedWeek(ALL_TIME_WEEK);
+                            } else {
+                                const week = CHALLENGE_WEEKS.find(w => w.id === val);
+                                if (week) setSelectedWeek(week);
+                            }
                         }}
                     >
+                        <option value={ALL_TIME_WEEK.id}>{ALL_TIME_WEEK.label}</option>
                         {CHALLENGE_WEEKS.map(w => {
                             const [startYear, startMonth, startDay] = w.start.split('-').map(Number);
                             const [endYear, endMonth, endDay] = w.end.split('-').map(Number);
@@ -134,25 +141,32 @@ export default function LeaderboardPage() {
                                             </div>
                                         </div>
 
-                                        {/* 7-Day Grid */}
-                                        <div className="grid grid-cols-7 gap-1.5 pl-12">
-                                            {weekDays.map((date) => {
-                                                const status = getDailyStatus(date, entry.logs);
-                                                return (
-                                                    <div key={date} className="flex flex-col items-center gap-1">
-                                                        <div
-                                                            className={cn(
-                                                                "w-full aspect-square rounded-[4px] transition-all",
-                                                                status === 'green' && "bg-emerald-500",
-                                                                status === 'yellow' && "bg-amber-400",
-                                                                status === 'grey' && "bg-secondary/50",
-                                                            )}
-                                                            title={`${date}: ${status === 'green' ? 'All Done' : status === 'yellow' ? 'Partial' : 'No Activity'}`}
-                                                        />
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                                        {/* 7-Day Grid - Only show if not All Time */}
+                                        {!isAllTime && (
+                                            <div className="grid grid-cols-7 gap-1.5 pl-12">
+                                                {weekDays.map((date) => {
+                                                    const status = getDailyStatus(date, entry.logs);
+                                                    return (
+                                                        <div key={date} className="flex flex-col items-center gap-1">
+                                                            <div
+                                                                className={cn(
+                                                                    "w-full aspect-square rounded-[4px] transition-all",
+                                                                    status === 'green' && "bg-emerald-500",
+                                                                    status === 'yellow' && "bg-amber-400",
+                                                                    status === 'grey' && "bg-secondary/50",
+                                                                )}
+                                                                title={`${date}: ${status === 'green' ? 'All Done' : status === 'yellow' ? 'Partial' : 'No Activity'}`}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                        {isAllTime && (
+                                            <div className="pl-12 text-xs text-muted-foreground italic">
+                                                Showing total points earned across all weeks.
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })
