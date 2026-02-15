@@ -4,6 +4,7 @@ import { sql } from "@vercel/postgres";
 import { User, ActivityLog, ActivityType } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { sanitizeInput } from "@/lib/utils";
+import { CHALLENGE_WEEKS } from "@/lib/challenge-dates";
 
 // --- User Actions ---
 
@@ -183,37 +184,47 @@ export async function getLeaderboard(startDate?: string, endDate?: string) {
         const result = await query;
 
         // Calculate capped scores for each user
-        // Workouts: max 3 days, Others (Walk, Water, Ramadan Prep): max 5 days each
+        // Workouts: max 3 days per week, Others: max 5 days per week
         const leaderboardWithScores = result.rows.map((row) => {
             const logs = Array.isArray(row.logs) ? row.logs : [];
 
-            // Group by activity type and count unique days
-            const activityDays = {
-                WALK: new Set<string>(),
-                WATER: new Set<string>(),
-                WORKOUT: new Set<string>(),
-                RAMADAN_PREP: new Set<string>()
-            };
+            // Group by week and activity type
+            const weeklyActivityDays: Record<number, Record<string, Set<string>>> = {};
+
+            CHALLENGE_WEEKS.forEach((week: any) => {
+                weeklyActivityDays[week.id] = {
+                    WALK: new Set<string>(),
+                    WATER: new Set<string>(),
+                    WORKOUT: new Set<string>(),
+                    RAMADAN_PREP: new Set<string>()
+                };
+            });
 
             logs.forEach((log: any) => {
                 if (log.completed && log.type && log.date) {
-                    const set = activityDays[log.type as keyof typeof activityDays];
-                    if (set) {
-                        set.add(log.date);
+                    const week = CHALLENGE_WEEKS.find((w: any) => log.date >= w.start && log.date <= w.end);
+                    if (week) {
+                        const set = weeklyActivityDays[week.id][log.type];
+                        if (set) {
+                            set.add(log.date);
+                        }
                     }
                 }
             });
 
-            // Apply caps: Workout max 3, others max 5
-            const cappedScore =
-                Math.min(activityDays.WORKOUT.size, 3) +
-                Math.min(activityDays.WALK.size, 5) +
-                Math.min(activityDays.WATER.size, 5) +
-                Math.min(activityDays.RAMADAN_PREP.size, 5);
+            // Sum capped scores for each week
+            let totalCappedScore = 0;
+            Object.values(weeklyActivityDays).forEach(activityDays => {
+                totalCappedScore +=
+                    Math.min(activityDays.WORKOUT.size, 3) +
+                    Math.min(activityDays.WALK.size, 5) +
+                    Math.min(activityDays.WATER.size, 5) +
+                    Math.min(activityDays.RAMADAN_PREP.size, 5);
+            });
 
             return {
                 ...row,
-                score: cappedScore,
+                score: totalCappedScore,
                 logs
             };
         });
