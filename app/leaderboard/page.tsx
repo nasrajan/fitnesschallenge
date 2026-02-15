@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLeaderboard } from "@/app/actions";
-import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats, ALL_TIME_WEEK } from "@/lib/challenge-dates";
+import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats, ALL_TIME_WEEK, getAllTimeStats } from "@/lib/challenge-dates";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trophy, Medal } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -101,7 +101,7 @@ export default function LeaderboardPage() {
                             leaderboard.map((entry) => {
                                 const rank = entry.rank;
                                 const isMe = user?.email === entry.email;
-                                const stats = getWeeklyStats(selectedWeek.start, selectedWeek.end, entry.logs);
+                                const stats = isAllTime ? getAllTimeStats(entry.logs) : getWeeklyStats(selectedWeek.start, selectedWeek.end, entry.logs);
 
                                 return (
                                     <div

@@ -89,3 +89,13 @@ export function getWeeklyStats(startDate: string, endDate: string, allLogs: Acti
     };
 }
 
+export function getAllTimeStats(allLogs: ActivityLog[]): { isSuccessful: boolean } {
+    // A user is successful "All Time" only if they were successful in EVERY week
+    const allWeeksSuccessful = CHALLENGE_WEEKS.every(week => {
+        const weekStats = getWeeklyStats(week.start, week.end, allLogs);
+        return weekStats.isSuccessful;
+    });
+
+    return { isSuccessful: allWeeksSuccessful };
+}
+
