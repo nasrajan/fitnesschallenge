@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLeaderboard } from "@/app/actions";
-import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, ALL_TIME_WEEK } from "@/lib/challenge-dates";
+import { CHALLENGE_WEEKS, getDatesInRange, getDailyStatus, getWeeklyStats, ALL_TIME_WEEK, getAllTimeStats } from "@/lib/challenge-dates";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trophy, Medal } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -102,6 +102,8 @@ export default function LeaderboardPage() {
                                 const rank = entry.rank;
                                 const isMe = user?.email === entry.email;
                                 const hasPoints = entry.score > 0;
+                                const stats = isAllTime ? getAllTimeStats(entry.logs) : getWeeklyStats(selectedWeek.start, selectedWeek.end, entry.logs);
+                                const isEmeraldRank = (isAllTime && rank === 1) || stats.isSuccessful;
 
                                 return (
                                     <div
@@ -109,9 +111,9 @@ export default function LeaderboardPage() {
                                         className={cn(
                                             "flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-500",
                                             isMe ? "bg-primary/5 border-primary ring-1 ring-primary/50" : "bg-card border-border/50 shadow-sm",
-                                            !isMe && hasPoints && rank === 1 && "bg-emerald-500/15 border-emerald-500/40 shadow-emerald-500/10 shadow-lg",
-                                            !isMe && hasPoints && rank === 2 && "bg-sky-500/15 border-sky-500/40 shadow-sky-500/10 shadow-lg",
-                                            !isMe && hasPoints && rank === 3 && "bg-amber-500/15 border-amber-500/40 shadow-amber-500/10 shadow-lg",
+                                            hasPoints && isEmeraldRank && "bg-emerald-500/15 border-emerald-500/40 shadow-emerald-500/10 shadow-lg",
+                                            hasPoints && !isEmeraldRank && rank === 2 && "bg-sky-500/15 border-sky-500/40 shadow-sky-500/10 shadow-lg",
+                                            hasPoints && !isEmeraldRank && rank === 3 && "bg-amber-500/15 border-amber-500/40 shadow-amber-500/10 shadow-lg",
                                             !isMe && hasPoints && rank > 3 && "bg-secondary/50 border-secondary-400/40"
                                         )}
                                     >
@@ -130,15 +132,15 @@ export default function LeaderboardPage() {
                                                 <div className="flex items-center gap-2">
                                                     <h3 className={cn(
                                                         "font-bold truncate text-base flex items-center gap-2",
-                                                        !isMe && hasPoints && rank === 1 && "text-emerald-700 dark:text-emerald-400",
-                                                        !isMe && hasPoints && rank === 2 && "text-sky-700 dark:text-sky-400",
-                                                        !isMe && hasPoints && rank === 3 && "text-amber-700 dark:text-amber-400",
-                                                    !isMe && hasPoints && rank > 3 && "text-muted-foreground",
+                                                        hasPoints && isEmeraldRank && "text-emerald-700 dark:text-emerald-400",
+                                                        hasPoints && !isEmeraldRank && rank === 2 && "text-sky-700 dark:text-sky-400",
+                                                        hasPoints && !isEmeraldRank && rank === 3 && "text-amber-700 dark:text-amber-400",
+                                                        !isMe && hasPoints && rank > 3 && "text-muted-foreground",
                                                         isMe && "underline decoration-primary/50"
                                                     )}>
                                                         {entry.firstName} {entry.lastName}
                                                         {isMe && <span className="text-xs font-normal text-muted-foreground ml-2">(You)</span>}
-                                                        {!isMe && hasPoints && rank === 1 && <Trophy className="h-4 w-4 text-emerald-500" />}
+                                                        {hasPoints && isEmeraldRank && <Trophy className="h-4 w-4 text-emerald-500" />}
                                                     </h3>
                                                 </div>
                                             </div>
@@ -146,9 +148,9 @@ export default function LeaderboardPage() {
                                             <div className="text-right">
                                                 <span className={cn(
                                                     "text-xl font-black",
-                                                    !isMe && hasPoints && rank === 1 && "text-emerald-600",
-                                                    !isMe && hasPoints && rank === 2 && "text-sky-600",
-                                                    !isMe && hasPoints && rank === 3 && "text-amber-600",
+                                                    hasPoints && isEmeraldRank && "text-emerald-600",
+                                                    hasPoints && !isEmeraldRank && rank === 2 && "text-sky-600",
+                                                    hasPoints && !isEmeraldRank && rank === 3 && "text-amber-600",
                                                     !isMe && hasPoints && rank > 3 && "text-muted-foreground"
                                                 )}>
                                                     {entry.score}
