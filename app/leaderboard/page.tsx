@@ -101,7 +101,9 @@ export default function LeaderboardPage() {
                             leaderboard.map((entry) => {
                                 const rank = entry.rank;
                                 const isMe = user?.email === entry.email;
+                                const hasPoints = entry.score > 0;
                                 const stats = isAllTime ? getAllTimeStats(entry.logs) : getWeeklyStats(selectedWeek.start, selectedWeek.end, entry.logs);
+                                const isEmeraldRank = (isAllTime && rank === 1) || stats.isSuccessful;
 
                                 return (
                                     <div
@@ -109,15 +111,18 @@ export default function LeaderboardPage() {
                                         className={cn(
                                             "flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-500",
                                             isMe ? "bg-primary/5 border-primary ring-1 ring-primary/50" : "bg-card border-border/50 shadow-sm",
-                                            stats.isSuccessful && "bg-emerald-500/15 border-emerald-500/40 shadow-emerald-500/10 shadow-lg"
+                                            hasPoints && isEmeraldRank && "bg-emerald-500/15 border-emerald-500/40 shadow-emerald-500/10 shadow-lg",
+                                            hasPoints && !isEmeraldRank && rank === 2 && "bg-sky-500/15 border-sky-500/40 shadow-sky-500/10 shadow-lg",
+                                            hasPoints && !isEmeraldRank && rank === 3 && "bg-amber-500/15 border-amber-500/40 shadow-amber-500/10 shadow-lg",
+                                            !isMe && hasPoints && rank > 3 && "bg-secondary/50 border-secondary-400/40"
                                         )}
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={cn(
                                                 "h-8 w-8 flex items-center justify-center rounded-full font-bold text-sm shrink-0",
-                                                entry.score > 0 && rank === 1 ? "text-white bg-yellow-500 shadow-md shadow-yellow-500/20" :
-                                                    entry.score > 0 && rank === 2 ? "text-white bg-slate-400 shadow-md shadow-slate-400/20" :
-                                                        entry.score > 0 && rank === 3 ? "text-white bg-amber-600 shadow-md shadow-amber-600/20" :
+                                                hasPoints && rank === 1 ? "text-white bg-emerald-500 shadow-md shadow-emerald-500/20" :
+                                                    hasPoints && rank === 2 ? "text-white bg-sky-500 shadow-md shadow-sky-500/20" :
+                                                        hasPoints && rank === 3 ? "text-white bg-amber-500 shadow-md shadow-amber-500/20" :
                                                             "text-muted-foreground bg-secondary"
                                             )}>
                                                 {entry.score > 0 && rank <= 3 ? <Medal className="h-5 w-5" /> : rank}
@@ -127,17 +132,29 @@ export default function LeaderboardPage() {
                                                 <div className="flex items-center gap-2">
                                                     <h3 className={cn(
                                                         "font-bold truncate text-base flex items-center gap-2",
-                                                        stats.isSuccessful && "text-emerald-700 dark:text-emerald-400"
+                                                        hasPoints && isEmeraldRank && "text-emerald-700 dark:text-emerald-400",
+                                                        hasPoints && !isEmeraldRank && rank === 2 && "text-sky-700 dark:text-sky-400",
+                                                        hasPoints && !isEmeraldRank && rank === 3 && "text-amber-700 dark:text-amber-400",
+                                                        !isMe && hasPoints && rank > 3 && "text-muted-foreground",
+                                                        isMe && "underline decoration-primary/50"
                                                     )}>
                                                         {entry.firstName} {entry.lastName}
                                                         {isMe && <span className="text-xs font-normal text-muted-foreground ml-2">(You)</span>}
-                                                        {stats.isSuccessful && <Trophy className="h-4 w-4 text-emerald-500" />}
+                                                        {hasPoints && isEmeraldRank && <Trophy className="h-4 w-4 text-emerald-500" />}
                                                     </h3>
                                                 </div>
                                             </div>
 
                                             <div className="text-right">
-                                                <span className={cn("text-xl font-black", stats.isSuccessful && "text-emerald-600")}>{entry.score}</span>
+                                                <span className={cn(
+                                                    "text-xl font-black",
+                                                    hasPoints && isEmeraldRank && "text-emerald-600",
+                                                    hasPoints && !isEmeraldRank && rank === 2 && "text-sky-600",
+                                                    hasPoints && !isEmeraldRank && rank === 3 && "text-amber-600",
+                                                    !isMe && hasPoints && rank > 3 && "text-muted-foreground"
+                                                )}>
+                                                    {entry.score}
+                                                </span>
                                             </div>
                                         </div>
 
