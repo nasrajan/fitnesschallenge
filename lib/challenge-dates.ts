@@ -85,7 +85,7 @@ export function getWeeklyStats(startDate: string, endDate: string, allLogs: Acti
 
     return {
         ...stats,
-        isSuccessful: stats.waterDays >= 3 && stats.walkDays >= 5 && stats.workoutDays >= 5 && stats.ramadanDays >= 5
+        isSuccessful: stats.waterDays >= 5 && stats.walkDays >= 5 && stats.workoutDays >= 3 && stats.ramadanDays >= 5
     };
 }
 
